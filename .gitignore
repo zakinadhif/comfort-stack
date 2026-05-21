@@ -21,3 +21,10 @@ dist/
 
 # TypeScript build info
 *.tsbuildinfo
+
+# Claude Code chat dumps and handoff documents
+/.claude-chat/
+
+# Generated API client and Zod schemas
+libs/api-client-react/src/generated/
+libs/api-zod/src/generated/

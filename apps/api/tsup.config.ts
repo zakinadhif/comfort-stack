@@ -1,7 +1,7 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-	entry: ["src/index.ts"],
+	entry: ["src/index.ts", "src/scripts/migrate.ts"],
 	format: ["esm"],
 	target: "node22",
 	clean: true,
@@ -9,6 +9,7 @@ export default defineConfig({
 	// Bundle workspace dependencies so we don't have to publish them
 	noExternal: [
 		"@myapp/auth",
+		"@myapp/config",
 		"@myapp/db",
 		"@myapp/api-zod",
 		"@myapp/storage",

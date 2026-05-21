@@ -1,12 +1,17 @@
 /// <reference types="node" />
 import { defineConfig } from "drizzle-kit";
 
-const databaseUrl = process.env.DATABASE_URL ?? "./local.db";
+// Defaults to the docker-compose.dev.yml Postgres so `db:generate` (which only
+// reads the schema) and `db:push`/`db:studio` (which connect) work locally.
+// Set DATABASE_URL to target another database.
+const databaseUrl =
+	process.env.DATABASE_URL ??
+	"postgres://comfort:comfort@localhost:5432/comfort";
 
 export default defineConfig({
-	out: "./src/migrations",
+	out: "./migrations",
 	schema: "./src/schema/*.ts",
-	dialect: "sqlite",
+	dialect: "postgresql",
 	dbCredentials: {
 		url: databaseUrl,
 	},

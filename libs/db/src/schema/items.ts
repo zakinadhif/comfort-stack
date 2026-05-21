@@ -1,10 +1,10 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
-export const items = sqliteTable("items", {
+export const items = pgTable("items", {
 	id: text("id").primaryKey(),
 	name: text("name").notNull(),
-	createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
 });
 
 export const selectItemSchema = createSelectSchema(items);

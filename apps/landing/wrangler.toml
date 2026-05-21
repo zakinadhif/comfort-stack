@@ -1,9 +1,0 @@
-name = "my-app-landing"
-pages_build_output_dir = "dist"
-compatibility_date = "2026-03-18"
-
-# Uncomment and configure for production:
-# [env.production]
-# [env.production.vars]
-# PUBLIC_APP_URL = "https://app.yourdomain.com"
-# PUBLIC_SITE_URL = "https://yourdomain.com"

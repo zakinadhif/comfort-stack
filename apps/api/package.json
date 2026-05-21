@@ -1,27 +1,28 @@
 {
-  "name": "api",
-  "type": "module",
-  "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "build": "tsup",
-    "start": "node dist/index.js",
-    "test": "vitest run",
-    "test:watch": "vitest"
-  },
-  "dependencies": {
-    "@hono/node-server": "^1.14.4",
-    "@myapp/auth": "workspace:^",
-    "@myapp/db": "workspace:^",
-    "@myapp/api-zod": "workspace:^",
-    "@myapp/storage": "workspace:^",
-    "dotenv": "^16.5.0",
-    "drizzle-orm": "catalog:",
-    "hono": "^4.7.11"
-  },
-  "devDependencies": {
-    "@types/node": "catalog:",
-    "tsup": "^8.5.0",
-    "tsx": "^4.19.4",
-    "vitest": "^3.2.4"
-  }
+	"name": "api",
+	"type": "module",
+	"scripts": {
+		"dev": "tsx watch src/index.ts",
+		"build": "tsup",
+		"start": "node dist/index.js",
+		"test": "vitest run",
+		"test:watch": "vitest"
+	},
+	"dependencies": {
+		"@hono/node-server": "^1.14.4",
+		"@myapp/auth": "workspace:^",
+		"@myapp/config": "workspace:^",
+		"@myapp/db": "workspace:^",
+		"@myapp/api-zod": "workspace:^",
+		"@myapp/storage": "workspace:^",
+		"dotenv": "^16.5.0",
+		"drizzle-orm": "catalog:",
+		"hono": "^4.7.11"
+	},
+	"devDependencies": {
+		"@types/node": "catalog:",
+		"tsup": "^8.5.0",
+		"tsx": "^4.19.4",
+		"vitest": "^3.2.4"
+	}
 }

@@ -1,6 +1,6 @@
 # Comfort Stack
 
-A production-ready, fully type-safe full-stack monorepo template. OpenAPI-first: one spec drives both the typed React Query client and server-side Zod validators. The API runs on Node.js and deploys anywhere via Docker.
+A production-ready, fully type-safe full-stack monorepo template. OpenAPI-first: one spec drives both the typed React Query client and server-side Zod validators. One portable Docker image — Hono serves the Astro landing, the React SPA, and the API together — deploys unchanged to Fly.io, Railway, Render, Cloud Run, Coolify/Dokploy, or bare Docker Compose. Postgres and S3-compatible storage are externalized adapters that switch between managed and self-hosted providers via env vars only.
 
 ---
 
@@ -10,7 +10,7 @@ A production-ready, fully type-safe full-stack monorepo template. OpenAPI-first:
 |---|---|
 | **Runtime** | Node.js 22 |
 | **API** | Hono v4 (`@hono/node-server`) |
-| **Database ORM** | Drizzle ORM (SQLite / better-sqlite3) |
+| **Database ORM** | Drizzle ORM (PostgreSQL / postgres-js) |
 | **Auth** | Better Auth (drizzle adapter, DB-backed sessions) |
 | **Storage** | Pluggable — AWS S3 or Google Cloud Storage (`@myapp/storage`) |
 | **API Codegen** | Orval (OpenAPI → React Query hooks + Zod validators) |
@@ -29,16 +29,18 @@ A production-ready, fully type-safe full-stack monorepo template. OpenAPI-first:
 ```
 my-app/
 ├── apps/
-│   ├── api/       # Hono API → Node.js (Docker)
-│   ├── app/       # React SPA → Cloudflare Pages / any static host
-│   └── landing/   # Astro landing page → Cloudflare Pages / any static host
-└── libs/
-    ├── api-spec/         # openapi.yaml + orval.config.ts (source of truth)
-    ├── api-client-react/ # Generated: TanStack Query hooks (@myapp/api-client-react)
-    ├── api-zod/          # Generated: Zod validators (@myapp/api-zod)
-    ├── auth/             # Better Auth config (@myapp/auth)
-    ├── db/               # Drizzle schema + SQLite client (@myapp/db)
-    └── storage/          # S3 / GCS storage adapters (@myapp/storage)
+│   ├── api/       # Hono API + static server → one Docker image
+│   ├── app/       # React SPA → built into the image, served at /app/*
+│   └── landing/   # Astro landing page → built into the image, served at /
+├── libs/
+│   ├── api-spec/         # openapi.yaml + orval.config.ts (source of truth)
+│   ├── api-client-react/ # Generated: TanStack Query hooks (@myapp/api-client-react)
+│   ├── api-zod/          # Generated: Zod validators (@myapp/api-zod)
+│   ├── auth/             # Better Auth config (@myapp/auth)
+│   ├── config/           # Zod-validated env loader (@myapp/config)
+│   ├── db/               # Drizzle schema + Postgres client (@myapp/db)
+│   └── storage/          # S3-compatible / GCS storage adapters (@myapp/storage)
+└── deploy/        # Dockerfile, compose, Caddyfile, platform manifests, docs
 ```
 
 ### OpenAPI-first flow
@@ -99,7 +101,7 @@ This runs the Better Auth CLI against `libs/auth/src/index.ts` and outputs the a
 pnpm db:push
 ```
 
-This creates/updates the local SQLite database file (defaults to `./local.db` in the API directory, configurable via `DATABASE_URL`).
+This pushes the Drizzle schema to your Postgres database (`DATABASE_URL`). Spin up a local Postgres + MinIO first with `docker compose -f deploy/docker-compose.dev.yml up -d`.
 
 ### 6. Generate the API client
 
@@ -147,15 +149,20 @@ pnpm dev:app
 
 ### `apps/api/.env` (local development)
 
+All env vars are validated at startup by `@myapp/config`. See
+[`deploy/.env.example`](deploy/.env.example) for the complete, documented reference.
+
 | Variable | Description |
 |---|---|
-| `PORT` | Server port (default: `3000`) |
-| `DATABASE_URL` | Path to the SQLite database file (default: `./local.db`) |
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
-| `BETTER_AUTH_URL` | Base URL for auth callbacks (e.g. `http://localhost:5173`) |
-| `BETTER_AUTH_SECRET` | Secret key for signing auth tokens |
-| `ALLOWED_ORIGINS` | Comma-separated list of allowed CORS origins |
+| `PORT` | Server port (default: `8080`) |
+| `APP_URL` | Public origin the app is served from |
+| `DATABASE_URL` | Postgres connection string (`postgres://...`) |
+| `STORAGE_*` | S3-compatible object storage — see [STORAGE_PROVIDERS.md](deploy/docs/STORAGE_PROVIDERS.md). Optional as a group |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID (optional) |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret (optional) |
+| `BETTER_AUTH_URL` | Base URL for auth callbacks (defaults to `APP_URL`) |
+| `BETTER_AUTH_SECRET` | Secret for signing auth tokens (min 32 chars) |
+| `ALLOWED_ORIGINS` | Comma-separated CORS allowlist (defaults to `APP_URL`) |
 
 ---
 
@@ -256,7 +263,7 @@ export function WidgetList() {
 
 - **Schema location**: `libs/db/src/schema/*.ts` — add a new file per entity and re-export it from `libs/db/src/schema/index.ts`.
 - **Auth schema**: Auto-generated by `pnpm better-auth:generate` — outputs to `libs/db/src/schema/auth.ts`. Do not edit this file manually; re-run the command after changing auth config.
-- **Local dev**: `pnpm db:push` reads/creates the SQLite file specified by `DATABASE_URL` (defaults to `./local.db`).
+- **Local dev**: `pnpm db:push` syncs the schema directly to the Postgres database at `DATABASE_URL`. For deploys, `pnpm db:generate` writes SQL migration files to `libs/db/migrations/` (commit them); they are applied by `node dist/scripts/migrate.js` as a separate deploy step — see [MIGRATION.md](deploy/docs/MIGRATION.md).
 - **Drizzle Studio**: `pnpm db:studio` opens a browser-based DB browser.
 
 > **Note**: The `tablesFilter` in `drizzle.config.ts` excludes `auth_*` (managed by Better Auth) tables so Drizzle Kit never touches them.
@@ -320,45 +327,49 @@ Use the `authClient` exported from `apps/app/src/lib/auth-client.ts` to call sig
 
 ## Deployment
 
-### API (Docker)
+One portable Docker image ([`deploy/Dockerfile`](deploy/Dockerfile)) builds all
+three apps and serves them from a single Hono process:
 
-A multi-stage `Dockerfile` is provided at `apps/api/Dockerfile`. Build and run:
-
-```bash
-# Build from the monorepo root
-docker build -f apps/api/Dockerfile -t my-app-api .
-
-# Run with a persistent database volume
-docker run -d \
-  -p 3000:3000 \
-  -v my-app-data:/app/data \
-  -e DATABASE_URL=/app/data/production.db \
-  -e BETTER_AUTH_SECRET=your-secret \
-  -e BETTER_AUTH_URL=https://app.example.com \
-  -e GOOGLE_CLIENT_ID=your-client-id \
-  -e GOOGLE_CLIENT_SECRET=your-client-secret \
-  -e ALLOWED_ORIGINS=https://app.example.com \
-  my-app-api
+```
+Hono :8080
+  /         → Astro landing (static)
+  /app/*    → React SPA (static, with client-side routing fallback)
+  /api/*    → API routes + Better Auth
+  /healthz  → liveness probe
 ```
 
-The image is based on `node:22-alpine` and bundles all workspace dependencies via `tsup`, resulting in a minimal production footprint.
-
-### App (Static hosting)
-
-Build and deploy the React SPA to any static host (Cloudflare Pages, Vercel, Netlify, S3 + CloudFront, etc.):
+Build and run it locally:
 
 ```bash
-pnpm --filter app run build
-# Output: apps/app/dist/
+docker build -f deploy/Dockerfile -t comfort-stack .
+docker run --rm -p 8080:8080 --env-file deploy/.env comfort-stack
 ```
 
-### Landing (Static hosting)
+The same image deploys unchanged to multiple targets — each gets a thin manifest
+under `deploy/`, and all platform-specific config lives in env vars
+([`deploy/.env.example`](deploy/.env.example) is the canonical reference):
 
-Same as above, using `apps/landing`:
+| Target | Manifest | Guide |
+|---|---|---|
+| Fly.io | `deploy/fly.toml` | [DEPLOY_FLY.md](deploy/docs/DEPLOY_FLY.md) |
+| Railway | `deploy/railway.json` | [DEPLOY_RAILWAY.md](deploy/docs/DEPLOY_RAILWAY.md) |
+| Render | `deploy/render.yaml` | [DEPLOY_RENDER.md](deploy/docs/DEPLOY_RENDER.md) |
+| Cloud Run | `deploy/cloudrun.service.yaml` | [DEPLOY_CLOUD_RUN.md](deploy/docs/DEPLOY_CLOUD_RUN.md) |
+| Coolify / Dokploy | `deploy/docker-compose.selfhost.yml` | [DEPLOY_COOLIFY.md](deploy/docs/DEPLOY_COOLIFY.md) |
+| Bare VPS (Compose) | `deploy/docker-compose.selfhost.yml` | [DEPLOY_COMPOSE.md](deploy/docs/DEPLOY_COMPOSE.md) |
+
+Postgres and object storage are externalized: swap `DATABASE_URL` between
+managed (Neon/Supabase/Cloud SQL) and self-hosted, or `STORAGE_*` between
+R2/B2/S3/MinIO, with no code change. See
+[STORAGE_PROVIDERS.md](deploy/docs/STORAGE_PROVIDERS.md) and
+[MIGRATION.md](deploy/docs/MIGRATION.md).
+
+### Local backing services
 
 ```bash
-pnpm --filter landing run build
-# Output: apps/landing/dist/
+docker compose -f deploy/docker-compose.dev.yml up -d   # Postgres + MinIO
+pnpm dev:api   # API on :8080
+pnpm dev:app   # SPA on :5173 (proxies /api → :8080)
 ```
 
 ---

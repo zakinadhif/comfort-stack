@@ -1,0 +1,33 @@
+app = "comfort-stack"
+primary_region = "sin"  # Singapore — change to your nearest region
+
+[build]
+  dockerfile = "deploy/Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/healthz"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
+
+# Migrations run as a release command before the new version goes live.
+# Secrets (DATABASE_URL, STORAGE_*, BETTER_AUTH_SECRET, ...) via `fly secrets set`.
+[deploy]
+  release_command = "node dist/scripts/migrate.js"

@@ -1,9 +1,9 @@
-import { Hono } from "hono";
-import { createAuth } from "@myapp/auth";
-import { createDb } from "@myapp/db";
+import { randomUUID } from "node:crypto";
+import type { createAuth } from "@myapp/auth";
+import type { createDb } from "@myapp/db";
 import { items } from "@myapp/db/schema";
 import { eq } from "drizzle-orm";
-import { randomUUID } from "node:crypto";
+import { Hono } from "hono";
 
 type Variables = {
 	auth: ReturnType<typeof createAuth>;
@@ -50,7 +50,11 @@ app.get("/:itemId", async (c) => {
 	const { itemId } = c.req.param();
 	const db = c.get("db");
 
-	const item = await db.select().from(items).where(eq(items.id, itemId)).get();
+	const [item] = await db
+		.select()
+		.from(items)
+		.where(eq(items.id, itemId))
+		.limit(1);
 
 	if (!item) {
 		return c.json({ error: "Item not found" }, 404);
@@ -71,11 +75,11 @@ app.delete("/:itemId", async (c) => {
 	const { itemId } = c.req.param();
 	const db = c.get("db");
 
-	const existing = await db
+	const [existing] = await db
 		.select({ id: items.id })
 		.from(items)
 		.where(eq(items.id, itemId))
-		.get();
+		.limit(1);
 
 	if (!existing) {
 		return c.json({ error: "Item not found" }, 404);

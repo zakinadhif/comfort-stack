@@ -1,6 +1,6 @@
+import type { Db } from "@myapp/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import type { Db } from "@myapp/db";
 
 interface AuthConfig {
 	db?: Db;
@@ -26,7 +26,7 @@ function createAuth(config?: AuthConfig) {
 			"http://localhost:3000",
 		secret: config?.BETTER_AUTH_SECRET ?? process.env.BETTER_AUTH_SECRET,
 		database: drizzleAdapter(config?.db ?? ({} as any), {
-			provider: "sqlite",
+			provider: "pg",
 			usePlural: true,
 		}),
 		emailAndPassword: {

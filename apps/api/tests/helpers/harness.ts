@@ -8,12 +8,12 @@
  * The `makeQueryResult` helper is the key trick: it returns an object that
  * satisfies both Drizzle usage patterns at once:
  *
- *   await db.select().from(table)              → resolves via .then() (list query)
- *   await db.select().from(table).where().get() → resolves via .get()  (single-row query)
+ *   await db.select().from(table)                    → list query (awaitable)
+ *   await db.select().from(table).where(...).limit(1) → single-row query
  */
 
-import { Hono } from "hono";
 import { items as itemsTable } from "@myapp/db/schema";
+import { Hono } from "hono";
 import itemsRouter from "../../src/routes/items";
 
 // ---------------------------------------------------------------------------
@@ -29,17 +29,25 @@ export type MockUser = { id: string; email: string };
 // ---------------------------------------------------------------------------
 
 /**
- * Returns an object that behaves like a Drizzle query builder result:
+ * Returns an object that behaves like a Drizzle (postgres-js) query builder
+ * result:
  * - Awaitable directly as a list  (`await db.select().from(table)`)
- * - Has `.get()` for single-row   (`await db.select().from(table).where(...).get()`)
+ * - Chainable `.limit(n)`          (`await db.select().from(table).where(...).limit(1)`)
  */
-const makeQueryResult = <T>(rows: T[]) => ({
-	get: async (): Promise<T | null> => rows[0] ?? null,
+const makeQueryResult = <T>(rows: T[]): QueryResult<T> => ({
+	limit: (_n: number) => makeQueryResult(rows),
+	// biome-ignore lint/suspicious/noThenProperty: intentional thenable — mocks Drizzle's awaitable query builder
+	then: <R>(resolve: (value: T[]) => R, reject?: (reason: unknown) => R) =>
+		Promise.resolve(rows).then(resolve, reject),
+});
+
+type QueryResult<T> = {
+	limit: (n: number) => QueryResult<T>;
 	then: <R>(
 		resolve: (value: T[]) => R,
 		reject?: (reason: unknown) => R,
-	) => Promise.resolve(rows).then(resolve, reject),
-});
+	) => Promise<R>;
+};
 
 // ---------------------------------------------------------------------------
 // In-memory db mock
@@ -79,7 +87,12 @@ export const createDbMock = (seed: DbSeed = {}) => {
 // ---------------------------------------------------------------------------
 
 type MockAuth = {
-	api: { getSession: () => Promise<{ user: MockUser; session: { id: string } } | null> };
+	api: {
+		getSession: () => Promise<{
+			user: MockUser;
+			session: { id: string };
+		} | null>;
+	};
 };
 
 /**

@@ -1,0 +1,10 @@
+# Auto-HTTPS (Let's Encrypt), HTTP/3, compression, and long-lived caching for
+# hashed assets. APP_DOMAIN is injected by docker-compose.selfhost.yml.
+{$APP_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:8080
+
+	# Hashed asset paths are immutable — cache them hard.
+	@static path /assets/* /_astro/* /app/assets/*
+	header @static Cache-Control "public, max-age=31536000, immutable"
+}
