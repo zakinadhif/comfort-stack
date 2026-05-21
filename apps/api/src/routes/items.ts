@@ -10,7 +10,7 @@ type Variables = {
 	db: ReturnType<typeof createDb>;
 };
 
-const app = new Hono<{ Bindings: CloudflareBindings; Variables: Variables }>();
+const app = new Hono<{ Variables: Variables }>();
 
 // GET /api/items — list all items
 app.get("/", async (c) => {
@@ -71,7 +71,11 @@ app.delete("/:itemId", async (c) => {
 	const { itemId } = c.req.param();
 	const db = c.get("db");
 
-	const existing = await db.select({ id: items.id }).from(items).where(eq(items.id, itemId)).get();
+	const existing = await db
+		.select({ id: items.id })
+		.from(items)
+		.where(eq(items.id, itemId))
+		.get();
 
 	if (!existing) {
 		return c.json({ error: "Item not found" }, 404);

@@ -1,5 +1,7 @@
-import { type Context, Hono } from "hono";
+import "dotenv/config";
+import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { serve } from "@hono/node-server";
 import { createAuth } from "@myapp/auth";
 import { createDb } from "@myapp/db";
 
@@ -17,10 +19,8 @@ const DEFAULT_ALLOWED_ORIGINS = [
 	"http://127.0.0.1:4321",
 ];
 
-function getAllowedOrigins(
-	c: Context<{ Bindings: CloudflareBindings; Variables: Variables }>,
-): string[] {
-	const rawOrigins = c.env.ALLOWED_ORIGINS;
+function getAllowedOrigins(): string[] {
+	const rawOrigins = process.env.ALLOWED_ORIGINS;
 	if (!rawOrigins) return DEFAULT_ALLOWED_ORIGINS;
 	const parsed = rawOrigins
 		.split(",")
@@ -29,7 +29,17 @@ function getAllowedOrigins(
 	return parsed.length > 0 ? parsed : DEFAULT_ALLOWED_ORIGINS;
 }
 
-const app = new Hono<{ Bindings: CloudflareBindings; Variables: Variables }>();
+// Initialise once at startup (not per-request, since we're on Node.js)
+const db = createDb(process.env.DATABASE_URL ?? "./local.db");
+const auth = createAuth({
+	db,
+	GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+	GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+	BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
+});
+
+const app = new Hono<{ Variables: Variables }>();
 
 // Global CORS (permissive — tighten for production)
 app.use("*", cors());
@@ -40,7 +50,7 @@ app.use(
 	cors({
 		origin: (origin, c) => {
 			if (!origin) return undefined;
-			const allowed = getAllowedOrigins(c);
+			const allowed = getAllowedOrigins();
 			return allowed.includes(origin) ? origin : undefined;
 		},
 		allowHeaders: ["Content-Type", "Authorization"],
@@ -51,28 +61,15 @@ app.use(
 	}),
 );
 
-// Initialize db and auth per request and set on context
+// Attach db and auth to context for every request
 app.use("*", async (c, next) => {
-	const db = createDb(c.env.DB);
 	c.set("db", db);
-
-	const auth = createAuth(
-		{
-			DB: db,
-			KV: c.env.KV,
-			GOOGLE_CLIENT_ID: c.env.GOOGLE_CLIENT_ID,
-			GOOGLE_CLIENT_SECRET: c.env.GOOGLE_CLIENT_SECRET,
-		},
-		(c.req.raw as any).cf || {},
-	);
 	c.set("auth", auth);
-
 	await next();
 });
 
 // Better Auth — handles all /api/auth/* routes
 app.all("/api/auth/*", async (c) => {
-	const auth = c.get("auth");
 	return auth.handler(c.req.raw);
 });
 
@@ -86,6 +83,11 @@ app.get("/api/healthz", (c) => {
 
 app.get("/", (c) => {
 	return c.text("Hello from Hono!");
+});
+
+const PORT = parseInt(process.env.PORT ?? "3000", 10);
+serve({ fetch: app.fetch, port: PORT }, () => {
+	console.log(`🚀 Server ready at http://localhost:${PORT}`);
 });
 
 export default app;

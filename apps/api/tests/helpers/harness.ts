@@ -80,7 +80,6 @@ export const createDbMock = (seed: DbSeed = {}) => {
 
 type MockAuth = {
 	api: { getSession: () => Promise<{ user: MockUser; session: { id: string } } | null> };
-	handler: () => Promise<Response>;
 };
 
 /**
@@ -96,11 +95,9 @@ export const createItemsTestApp = (
 			getSession: async () =>
 				user ? { user, session: { id: "test-session-id" } } : null,
 		},
-		handler: async () => new Response("OK"),
 	};
 
 	const app = new Hono<{
-		Bindings: CloudflareBindings;
 		Variables: { db: typeof db; auth: typeof mockAuth };
 	}>();
 
@@ -112,18 +109,7 @@ export const createItemsTestApp = (
 
 	app.route("/", itemsRouter);
 
-	const mockEnv = {
-		DB: {} as D1Database,
-		KV: {} as KVNamespace,
-		R2: {} as R2Bucket,
-		GOOGLE_CLIENT_ID: "test-client-id",
-		GOOGLE_CLIENT_SECRET: "test-client-secret",
-		BETTER_AUTH_URL: "http://localhost:5173",
-		ALLOWED_ORIGINS: "http://localhost:5173",
-	} satisfies CloudflareBindings;
-
 	return {
-		request: (path: string, init?: RequestInit) =>
-			app.request(path, init, mockEnv),
+		request: (path: string, init?: RequestInit) => app.request(path, init),
 	};
 };

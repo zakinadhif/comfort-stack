@@ -1,79 +1,56 @@
-import type { D1Database, IncomingRequestCfProperties } from "@cloudflare/workers-types";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { withCloudflare } from "better-auth-cloudflare";
 import type { Db } from "@myapp/db";
 
-interface AuthEnv {
-	KV?: KVNamespace;
-	DB: Db;
-	GOOGLE_CLIENT_ID: string;
-	GOOGLE_CLIENT_SECRET: string;
+interface AuthConfig {
+	db?: Db;
+	GOOGLE_CLIENT_ID?: string;
+	GOOGLE_CLIENT_SECRET?: string;
+	BETTER_AUTH_URL?: string;
+	BETTER_AUTH_SECRET?: string;
 }
 
 /**
  * Creates a Better Auth instance.
  *
- * - Pass `env` at runtime (inside a Cloudflare Worker request handler).
- * - Omit `env` for CLI usage (e.g. `pnpm better-auth:generate`) — uses
- *   a mock drizzle adapter so the CLI can introspect the auth schema without
- *   needing real Cloudflare bindings.
+ * - Pass a full `config` at runtime (inside the Hono request handler).
+ * - Omit `config` for CLI usage (e.g. `pnpm better-auth:generate`) — uses a
+ *   mock drizzle adapter so the CLI can introspect the auth schema without
+ *   needing a real database connection.
  */
-function createAuth(env?: AuthEnv, cf?: IncomingRequestCfProperties) {
-	const db = env ? env.DB : ({} as any);
-
+function createAuth(config?: AuthConfig) {
 	return betterAuth({
-		...withCloudflare(
-			{
-				autoDetectIpAddress: true,
-				geolocationTracking: true,
-				cf: cf || {},
-				d1: env
-					? {
-							db,
-							options: {
-								usePlural: true,
-								debugLogs: false,
-							},
-						}
-					: undefined,
-				kv: env?.KV as any,
-			},
-			{
-				emailAndPassword: {
-					enabled: true,
-				},
-				socialProviders: env
-					? {
-							google: {
-								enabled: true,
-								clientId: env.GOOGLE_CLIENT_ID,
-								clientSecret: env.GOOGLE_CLIENT_SECRET,
-							},
-						}
-					: {},
-				rateLimit: {
-					enabled: true,
-					window: 60, // seconds (minimum KV TTL)
-					max: 100, // requests per window
-				},
-			},
-		),
-		// Only add the drizzle adapter for CLI schema generation.
-		// At runtime, the D1 binding is used directly via better-auth-cloudflare.
-		...(env
-			? {}
-			: {
-					database: drizzleAdapter({} as D1Database, {
-						provider: "sqlite",
-						usePlural: true,
-					}),
-				}),
+		baseURL:
+			config?.BETTER_AUTH_URL ??
+			process.env.BETTER_AUTH_URL ??
+			"http://localhost:3000",
+		secret: config?.BETTER_AUTH_SECRET ?? process.env.BETTER_AUTH_SECRET,
+		database: drizzleAdapter(config?.db ?? ({} as any), {
+			provider: "sqlite",
+			usePlural: true,
+		}),
+		emailAndPassword: {
+			enabled: true,
+		},
+		socialProviders: config?.GOOGLE_CLIENT_ID
+			? {
+					google: {
+						enabled: true,
+						clientId: config.GOOGLE_CLIENT_ID,
+						clientSecret: config.GOOGLE_CLIENT_SECRET!,
+					},
+				}
+			: {},
+		rateLimit: {
+			enabled: true,
+			window: 60,
+			max: 100,
+		},
 	});
 }
 
 // Export for CLI schema generation (`pnpm better-auth:generate`)
 export const auth = createAuth();
 
-// Export for runtime usage inside Cloudflare Workers
+// Export for runtime usage inside the Hono server
 export { createAuth };

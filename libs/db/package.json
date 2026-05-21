@@ -7,21 +7,19 @@
     "./schema": "./src/schema/index.ts"
   },
   "scripts": {
-    "db:push:local": "cross-env TARGET=local drizzle-kit push --config drizzle.config.ts",
-    "db:push:remote": "cross-env TARGET=remote drizzle-kit push --config drizzle.config.ts",
-    "db:studio:local": "cross-env TARGET=local drizzle-kit studio --config drizzle.config.ts",
-    "db:studio:remote": "cross-env TARGET=remote drizzle-kit studio --config drizzle.config.ts"
+    "db:push": "drizzle-kit push --config drizzle.config.ts",
+    "db:studio": "drizzle-kit studio --config drizzle.config.ts",
+    "db:generate": "drizzle-kit generate --config drizzle.config.ts"
   },
   "dependencies": {
+    "better-sqlite3": "^12.8.0",
     "drizzle-orm": "catalog:",
     "drizzle-zod": "^0.8.3",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260317.1",
+    "@types/better-sqlite3": "^7.6.12",
     "@types/node": "catalog:",
-    "better-sqlite3": "^12.8.0",
-    "cross-env": "^10.1.0",
     "drizzle-kit": "^0.31.10"
   }
 }

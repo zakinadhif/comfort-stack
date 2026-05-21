@@ -8,12 +8,11 @@
     "better-auth:generate": "auth generate --config ./src/index.ts --output ../db/src/schema/auth.ts --yes"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260317.1",
+    "@types/node": "catalog:",
     "auth": "^1.5.5"
   },
   "dependencies": {
     "@myapp/db": "workspace:^",
-    "better-auth": "^1.5.5",
-    "better-auth-cloudflare": "^0.2.9"
+    "better-auth": "^1.5.5"
   }
 }

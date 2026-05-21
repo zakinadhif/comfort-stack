@@ -82,12 +82,12 @@ describe("POST /", () => {
 			headers: { "Content-Type": "application/json" },
 		});
 
-		const body = (await res.json()) as { id: string; name: string; createdAt: number };
+		const body = (await res.json()) as { id: string; name: string; createdAt: string };
 
 		expect(res.status).toBe(201);
 		expect(body.name).toBe("New Item");
 		expect(typeof body.id).toBe("string");
-		expect(typeof body.createdAt).toBe("number");
+		expect(typeof body.createdAt).toBe("string");
 		// Verify the item was added to state
 		expect(state.items).toHaveLength(1);
 		expect(state.items[0]?.name).toBe("New Item");
