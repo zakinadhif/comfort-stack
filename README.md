@@ -135,6 +135,7 @@ pnpm dev:app
 | `pnpm db:push` | Push the Drizzle schema to the SQLite database |
 | `pnpm db:studio` | Open Drizzle Studio connected to the SQLite database |
 | `pnpm db:generate` | Generate Drizzle migration files from schema changes |
+| `pnpm db:seed` | Run the seed runner against `DATABASE_URL` (use `-- --help` for flags) |
 | `pnpm format` | Format all files with Biome |
 | `pnpm lint` | Lint all files with Biome (read-only) |
 | `pnpm lint:fix` | Lint and auto-fix all files with Biome |
@@ -267,6 +268,49 @@ export function WidgetList() {
 - **Drizzle Studio**: `pnpm db:studio` opens a browser-based DB browser.
 
 > **Note**: The `tablesFilter` in `drizzle.config.ts` excludes `auth_*` (managed by Better Auth) tables so Drizzle Kit never touches them.
+
+### Seeding
+
+`pnpm db:seed` runs registered seeders against `DATABASE_URL`. Each seeder runs inside its own transaction, so a partial failure rolls back cleanly.
+
+```bash
+pnpm db:seed                       # run all seeders (idempotent by default)
+pnpm db:seed -- --only items       # run a single seeder
+pnpm db:seed -- --reset --yes      # truncate each seeder's tables, then re-seed
+pnpm db:seed -- --list             # list registered seeders
+pnpm db:seed -- --help             # full usage
+```
+
+**Adding a seeder:**
+
+1. Create `libs/db/src/seed/seeders/<name>.ts` exporting a `Seeder`. Use `onConflictDoNothing()` for idempotency.
+
+   ```ts
+   import { widgets } from "../../schema";
+   import type { Seeder } from "../types";
+
+   export const widgetsSeeder: Seeder = {
+     name: "widgets",
+     tables: [widgets], // listed here → eligible for --reset
+     async run({ db, log }) {
+       const rows = [{ id: "w1", label: "Hello" }];
+       const inserted = await db
+         .insert(widgets)
+         .values(rows)
+         .onConflictDoNothing({ target: widgets.id })
+         .returning({ id: widgets.id });
+       log(`widgets: inserted ${inserted.length} / ${rows.length}`);
+     },
+   };
+   ```
+
+2. Register it in `libs/db/src/seed/index.ts` (order matters for FK dependencies).
+
+**Safety:**
+
+- Refuses to run when `NODE_ENV=production` unless `--force` is also passed.
+- `--reset` requires `--yes` to confirm — it truncates with `RESTART IDENTITY CASCADE`.
+- In production, the seed script is bundled to `dist/scripts/seed.js` alongside `migrate.js`, so you can run it as a one-shot job: `node dist/scripts/seed.js --force`.
 
 ---
 

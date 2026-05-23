@@ -30,3 +30,6 @@ export async function runMigrations(url: string, migrationsFolder: string) {
 		await client.end();
 	}
 }
+
+export { runSeedCli, seeders } from "./seed";
+export type { Seeder, SeedContext, SeedDb } from "./seed";
