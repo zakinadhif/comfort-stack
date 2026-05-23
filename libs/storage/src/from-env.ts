@@ -10,13 +10,13 @@ import { createS3Storage } from "./s3";
  * deploy/docs/STORAGE_PROVIDERS.md for the per-provider table.
  */
 export function createStorageFromEnv(): StorageProvider {
-	const cfg = loadStorageConfig();
-	return createS3Storage({
-		bucket: cfg.bucket,
-		region: cfg.region,
-		accessKeyId: cfg.accessKey,
-		secretAccessKey: cfg.secretKey,
-		endpoint: cfg.endpoint,
-		forcePathStyle: cfg.forcePathStyle,
-	});
+  const cfg = loadStorageConfig();
+  return createS3Storage({
+    bucket: cfg.bucket,
+    region: cfg.region,
+    accessKeyId: cfg.accessKey,
+    secretAccessKey: cfg.secretKey,
+    endpoint: cfg.endpoint,
+    forcePathStyle: cfg.forcePathStyle,
+  });
 }

@@ -11,8 +11,8 @@ import * as schema from "./schema";
  * with no change.
  */
 export const createDb = (url: string) => {
-	const client = postgres(url);
-	return drizzle(client, { schema });
+  const client = postgres(url);
+  return drizzle(client, { schema });
 };
 
 export type Db = ReturnType<typeof createDb>;
@@ -23,13 +23,13 @@ export type Db = ReturnType<typeof createDb>;
  * Railway/Render predeploy, Cloud Run Job) — never on app startup.
  */
 export async function runMigrations(url: string, migrationsFolder: string) {
-	const client = postgres(url, { max: 1 });
-	try {
-		await migrate(drizzle(client), { migrationsFolder });
-	} finally {
-		await client.end();
-	}
+  const client = postgres(url, { max: 1 });
+  try {
+    await migrate(drizzle(client), { migrationsFolder });
+  } finally {
+    await client.end();
+  }
 }
 
+export type { SeedContext, SeedDb, Seeder } from "./seed";
 export { runSeedCli, seeders } from "./seed";
-export type { Seeder, SeedContext, SeedDb } from "./seed";

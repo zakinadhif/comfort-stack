@@ -1,14 +1,14 @@
 {
-	"name": "@myapp/config",
-	"version": "0.0.0",
-	"private": true,
-	"exports": {
-		".": "./src/index.ts"
-	},
-	"dependencies": {
-		"zod": "catalog:"
-	},
-	"devDependencies": {
-		"@types/node": "catalog:"
-	}
+  "name": "@myapp/config",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:"
+  }
 }

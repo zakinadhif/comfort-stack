@@ -35,18 +35,18 @@ export type MockUser = { id: string; email: string };
  * - Chainable `.limit(n)`          (`await db.select().from(table).where(...).limit(1)`)
  */
 const makeQueryResult = <T>(rows: T[]): QueryResult<T> => ({
-	limit: (_n: number) => makeQueryResult(rows),
-	// biome-ignore lint/suspicious/noThenProperty: intentional thenable — mocks Drizzle's awaitable query builder
-	then: <R>(resolve: (value: T[]) => R, reject?: (reason: unknown) => R) =>
-		Promise.resolve(rows).then(resolve, reject),
+  limit: (_n: number) => makeQueryResult(rows),
+  // biome-ignore lint/suspicious/noThenProperty: intentional thenable — mocks Drizzle's awaitable query builder
+  then: <R>(resolve: (value: T[]) => R, reject?: (reason: unknown) => R) =>
+    Promise.resolve(rows).then(resolve, reject),
 });
 
 type QueryResult<T> = {
-	limit: (n: number) => QueryResult<T>;
-	then: <R>(
-		resolve: (value: T[]) => R,
-		reject?: (reason: unknown) => R,
-	) => Promise<R>;
+  limit: (n: number) => QueryResult<T>;
+  then: <R>(
+    resolve: (value: T[]) => R,
+    reject?: (reason: unknown) => R,
+  ) => Promise<R>;
 };
 
 // ---------------------------------------------------------------------------
@@ -54,32 +54,32 @@ type QueryResult<T> = {
 // ---------------------------------------------------------------------------
 
 export const createDbMock = (seed: DbSeed = {}) => {
-	const state = {
-		items: seed.items ? [...seed.items] : ([] as ItemRow[]),
-	};
+  const state = {
+    items: seed.items ? [...seed.items] : ([] as ItemRow[]),
+  };
 
-	const db = {
-		select: (_fields?: unknown) => ({
-			from: (table: unknown) => {
-				const rows = table === itemsTable ? state.items : [];
-				return {
-					where: (_condition?: unknown) => makeQueryResult(rows),
-					...makeQueryResult(rows),
-				};
-			},
-		}),
-		insert: (_table: unknown) => ({
-			values: (values: ItemRow) => {
-				state.items.push(values);
-				return Promise.resolve(undefined);
-			},
-		}),
-		delete: (_table: unknown) => ({
-			where: (_condition?: unknown) => Promise.resolve(undefined),
-		}),
-	};
+  const db = {
+    select: (_fields?: unknown) => ({
+      from: (table: unknown) => {
+        const rows = table === itemsTable ? state.items : [];
+        return {
+          where: (_condition?: unknown) => makeQueryResult(rows),
+          ...makeQueryResult(rows),
+        };
+      },
+    }),
+    insert: (_table: unknown) => ({
+      values: (values: ItemRow) => {
+        state.items.push(values);
+        return Promise.resolve(undefined);
+      },
+    }),
+    delete: (_table: unknown) => ({
+      where: (_condition?: unknown) => Promise.resolve(undefined),
+    }),
+  };
 
-	return { db, state };
+  return { db, state };
 };
 
 // ---------------------------------------------------------------------------
@@ -87,12 +87,12 @@ export const createDbMock = (seed: DbSeed = {}) => {
 // ---------------------------------------------------------------------------
 
 type MockAuth = {
-	api: {
-		getSession: () => Promise<{
-			user: MockUser;
-			session: { id: string };
-		} | null>;
-	};
+  api: {
+    getSession: () => Promise<{
+      user: MockUser;
+      session: { id: string };
+    } | null>;
+  };
 };
 
 /**
@@ -100,29 +100,29 @@ type MockAuth = {
  * Pass a `user` to simulate an authenticated request; omit for anonymous.
  */
 export const createItemsTestApp = (
-	db: ReturnType<typeof createDbMock>["db"],
-	user: MockUser | null = null,
+  db: ReturnType<typeof createDbMock>["db"],
+  user: MockUser | null = null,
 ) => {
-	const mockAuth: MockAuth = {
-		api: {
-			getSession: async () =>
-				user ? { user, session: { id: "test-session-id" } } : null,
-		},
-	};
+  const mockAuth: MockAuth = {
+    api: {
+      getSession: async () =>
+        user ? { user, session: { id: "test-session-id" } } : null,
+    },
+  };
 
-	const app = new Hono<{
-		Variables: { db: typeof db; auth: typeof mockAuth };
-	}>();
+  const app = new Hono<{
+    Variables: { db: typeof db; auth: typeof mockAuth };
+  }>();
 
-	app.use("*", async (c, next) => {
-		c.set("db", db as any);
-		c.set("auth", mockAuth as any);
-		await next();
-	});
+  app.use("*", async (c, next) => {
+    c.set("db", db);
+    c.set("auth", mockAuth);
+    await next();
+  });
 
-	app.route("/", itemsRouter);
+  app.route("/", itemsRouter);
 
-	return {
-		request: (path: string, init?: RequestInit) => app.request(path, init),
-	};
+  return {
+    request: (path: string, init?: RequestInit) => app.request(path, init),
+  };
 };

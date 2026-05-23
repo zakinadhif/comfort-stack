@@ -1,56 +1,56 @@
 {
-	"ServiceName": "comfort-stack",
-	"SourceConfiguration": {
-		"AutoDeploymentsEnabled": false,
-		"ImageRepository": {
-			"ImageIdentifier": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/comfort-stack:latest",
-			"ImageRepositoryType": "ECR",
-			"ImageConfiguration": {
-				"Port": "8080",
-				"RuntimeEnvironmentVariables": {
-					"NODE_ENV": "production",
-					"PORT": "8080"
-				},
-				"RuntimeEnvironmentSecrets": {
-					"APP_URL": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/APP_URL",
-					"DATABASE_URL": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/DATABASE_URL",
-					"BETTER_AUTH_SECRET": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/BETTER_AUTH_SECRET",
-					"BETTER_AUTH_URL": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/BETTER_AUTH_URL",
-					"GOOGLE_CLIENT_ID": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/GOOGLE_CLIENT_ID",
-					"GOOGLE_CLIENT_SECRET": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/GOOGLE_CLIENT_SECRET",
-					"ALLOWED_ORIGINS": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/ALLOWED_ORIGINS",
-					"STORAGE_ENDPOINT": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/STORAGE_ENDPOINT",
-					"STORAGE_REGION": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/STORAGE_REGION",
-					"STORAGE_ACCESS_KEY": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/STORAGE_ACCESS_KEY",
-					"STORAGE_SECRET_KEY": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/STORAGE_SECRET_KEY",
-					"STORAGE_BUCKET": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/STORAGE_BUCKET",
-					"STORAGE_FORCE_PATH_STYLE": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/STORAGE_FORCE_PATH_STYLE"
-				}
-			}
-		},
-		"AuthenticationConfiguration": {
-			"AccessRoleArn": "arn:aws:iam::ACCOUNT_ID:role/AppRunnerECRAccessRole"
-		}
-	},
-	"InstanceConfiguration": {
-		"Cpu": "1024",
-		"Memory": "2048",
-		"InstanceRoleArn": "arn:aws:iam::ACCOUNT_ID:role/AppRunnerInstanceRole"
-	},
-	"HealthCheckConfiguration": {
-		"Protocol": "HTTP",
-		"Path": "/healthz",
-		"Interval": 10,
-		"Timeout": 5,
-		"HealthyThreshold": 1,
-		"UnhealthyThreshold": 5
-	},
-	"NetworkConfiguration": {
-		"EgressConfiguration": {
-			"EgressType": "DEFAULT"
-		},
-		"IngressConfiguration": {
-			"IsPubliclyAccessible": true
-		}
-	}
+  "ServiceName": "comfort-stack",
+  "SourceConfiguration": {
+    "AutoDeploymentsEnabled": false,
+    "ImageRepository": {
+      "ImageIdentifier": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/comfort-stack:latest",
+      "ImageRepositoryType": "ECR",
+      "ImageConfiguration": {
+        "Port": "8080",
+        "RuntimeEnvironmentVariables": {
+          "NODE_ENV": "production",
+          "PORT": "8080"
+        },
+        "RuntimeEnvironmentSecrets": {
+          "APP_URL": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/APP_URL",
+          "DATABASE_URL": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/DATABASE_URL",
+          "BETTER_AUTH_SECRET": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/BETTER_AUTH_SECRET",
+          "BETTER_AUTH_URL": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/BETTER_AUTH_URL",
+          "GOOGLE_CLIENT_ID": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/GOOGLE_CLIENT_ID",
+          "GOOGLE_CLIENT_SECRET": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/GOOGLE_CLIENT_SECRET",
+          "ALLOWED_ORIGINS": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/ALLOWED_ORIGINS",
+          "STORAGE_ENDPOINT": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/STORAGE_ENDPOINT",
+          "STORAGE_REGION": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/STORAGE_REGION",
+          "STORAGE_ACCESS_KEY": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/STORAGE_ACCESS_KEY",
+          "STORAGE_SECRET_KEY": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/STORAGE_SECRET_KEY",
+          "STORAGE_BUCKET": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/STORAGE_BUCKET",
+          "STORAGE_FORCE_PATH_STYLE": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:comfort-stack/STORAGE_FORCE_PATH_STYLE"
+        }
+      }
+    },
+    "AuthenticationConfiguration": {
+      "AccessRoleArn": "arn:aws:iam::ACCOUNT_ID:role/AppRunnerECRAccessRole"
+    }
+  },
+  "InstanceConfiguration": {
+    "Cpu": "1024",
+    "Memory": "2048",
+    "InstanceRoleArn": "arn:aws:iam::ACCOUNT_ID:role/AppRunnerInstanceRole"
+  },
+  "HealthCheckConfiguration": {
+    "Protocol": "HTTP",
+    "Path": "/healthz",
+    "Interval": 10,
+    "Timeout": 5,
+    "HealthyThreshold": 1,
+    "UnhealthyThreshold": 5
+  },
+  "NetworkConfiguration": {
+    "EgressConfiguration": {
+      "EgressType": "DEFAULT"
+    },
+    "IngressConfiguration": {
+      "IsPubliclyAccessible": true
+    }
+  }
 }

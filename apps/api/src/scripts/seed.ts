@@ -15,12 +15,12 @@ import { runSeedCli, seeders } from "@myapp/db";
  * `--force` is also passed.
  */
 await runSeedCli({
-	loadConfig: () => {
-		const config = loadConfig();
-		return {
-			databaseUrl: config.DATABASE_URL,
-			isProduction: config.NODE_ENV === "production",
-		};
-	},
-	seeders,
+  loadConfig: () => {
+    const config = loadConfig();
+    return {
+      databaseUrl: config.DATABASE_URL,
+      isProduction: config.NODE_ENV === "production",
+    };
+  },
+  seeders,
 });

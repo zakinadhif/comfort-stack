@@ -10,21 +10,21 @@ import type { Db } from "../index";
 export type SeedDb = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 export interface SeedContext {
-	db: SeedDb;
-	/** Indented logger scoped to the current seeder. */
-	log: (msg: string) => void;
+  db: SeedDb;
+  /** Indented logger scoped to the current seeder. */
+  log: (msg: string) => void;
 }
 
 export interface Seeder {
-	/** Stable identifier used by `--only` and in log lines. */
-	name: string;
-	/** Optional short description shown by `--list`. */
-	description?: string;
-	/**
-	 * Tables this seeder owns. When `--reset` is passed, the runner truncates
-	 * these (with `RESTART IDENTITY CASCADE`) inside the seeder's transaction
-	 * before invoking `run`. Omit to opt out of `--reset` for this seeder.
-	 */
-	tables?: readonly AnyPgTable[];
-	run(ctx: SeedContext): Promise<void>;
+  /** Stable identifier used by `--only` and in log lines. */
+  name: string;
+  /** Optional short description shown by `--list`. */
+  description?: string;
+  /**
+   * Tables this seeder owns. When `--reset` is passed, the runner truncates
+   * these (with `RESTART IDENTITY CASCADE`) inside the seeder's transaction
+   * before invoking `run`. Omit to opt out of `--reset` for this seeder.
+   */
+  tables?: readonly AnyPgTable[];
+  run(ctx: SeedContext): Promise<void>;
 }

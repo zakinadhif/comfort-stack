@@ -1,25 +1,25 @@
 {
-	"name": "@myapp/db",
-	"version": "0.0.0",
-	"private": true,
-	"exports": {
-		".": "./src/index.ts",
-		"./schema": "./src/schema/index.ts"
-	},
-	"scripts": {
-		"db:push": "drizzle-kit push --config drizzle.config.ts",
-		"db:studio": "drizzle-kit studio --config drizzle.config.ts",
-		"db:generate": "drizzle-kit generate --config drizzle.config.ts",
-		"db:migrate": "drizzle-kit migrate --config drizzle.config.ts"
-	},
-	"dependencies": {
-		"drizzle-orm": "catalog:",
-		"drizzle-zod": "^0.8.3",
-		"postgres": "^3.4.5",
-		"zod": "catalog:"
-	},
-	"devDependencies": {
-		"@types/node": "catalog:",
-		"drizzle-kit": "^0.31.10"
-	}
+  "name": "@myapp/db",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts"
+  },
+  "scripts": {
+    "db:push": "drizzle-kit push --config drizzle.config.ts",
+    "db:studio": "drizzle-kit studio --config drizzle.config.ts",
+    "db:generate": "drizzle-kit generate --config drizzle.config.ts",
+    "db:migrate": "drizzle-kit migrate --config drizzle.config.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "catalog:",
+    "drizzle-zod": "^0.8.3",
+    "postgres": "^3.4.5",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "drizzle-kit": "^0.31.10"
+  }
 }

@@ -11,7 +11,7 @@ import { runMigrations } from "@myapp/db";
  */
 const config = loadConfig();
 const migrationsFolder =
-	process.env.MIGRATIONS_DIR ?? path.resolve(process.cwd(), "migrations");
+  process.env.MIGRATIONS_DIR ?? path.resolve(process.cwd(), "migrations");
 
 console.log(`Running migrations from ${migrationsFolder} ...`);
 await runMigrations(config.DATABASE_URL, migrationsFolder);

@@ -1,17 +1,17 @@
 {
-	"name": "@myapp/storage",
-	"version": "0.0.0",
-	"private": true,
-	"exports": {
-		".": "./src/index.ts"
-	},
-	"dependencies": {
-		"@aws-sdk/client-s3": "^3.750.0",
-		"@aws-sdk/s3-request-presigner": "^3.750.0",
-		"@google-cloud/storage": "^7.15.2",
-		"@myapp/config": "workspace:^"
-	},
-	"devDependencies": {
-		"@types/node": "catalog:"
-	}
+  "name": "@myapp/storage",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.750.0",
+    "@aws-sdk/s3-request-presigner": "^3.750.0",
+    "@google-cloud/storage": "^7.15.2",
+    "@myapp/config": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:"
+  }
 }

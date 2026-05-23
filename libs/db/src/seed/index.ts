@@ -12,4 +12,4 @@ import type { Seeder } from "./types";
 export const seeders: readonly Seeder[] = [itemsSeeder];
 
 export { runSeedCli } from "./runner";
-export type { Seeder, SeedContext, SeedDb } from "./types";
+export type { SeedContext, SeedDb, Seeder } from "./types";
