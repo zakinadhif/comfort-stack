@@ -1,6 +1,6 @@
 # Comfort Stack
 
-A production-ready, fully type-safe full-stack monorepo template. OpenAPI-first: one spec drives both the typed React Query client and server-side Zod validators. One portable Docker image — Hono serves the Astro landing, the React SPA, and the API together — deploys unchanged to Fly.io, Railway, Render, Cloud Run, Coolify/Dokploy, or bare Docker Compose. Postgres and S3-compatible storage are externalized adapters that switch between managed and self-hosted providers via env vars only.
+A production-ready, fully type-safe full-stack monorepo template. OpenAPI-first: one spec drives both the typed React Query client and server-side Zod validators. One portable Docker image — Hono serves the Astro landing, the React SPA, and the API together — deploys unchanged to Fly.io, Railway, Render, Cloud Run, AWS App Runner, Coolify/Dokploy, or bare Docker Compose. Postgres and S3-compatible storage are externalized adapters that switch between managed and self-hosted providers via env vars only.
 
 ---
 
@@ -355,6 +355,7 @@ under `deploy/`, and all platform-specific config lives in env vars
 | Railway | `deploy/railway.json` | [DEPLOY_RAILWAY.md](deploy/docs/DEPLOY_RAILWAY.md) |
 | Render | `deploy/render.yaml` | [DEPLOY_RENDER.md](deploy/docs/DEPLOY_RENDER.md) |
 | Cloud Run | `deploy/cloudrun.service.yaml` | [DEPLOY_CLOUD_RUN.md](deploy/docs/DEPLOY_CLOUD_RUN.md) |
+| AWS App Runner | `deploy/apprunner.json` | [DEPLOY_APP_RUNNER.md](deploy/docs/DEPLOY_APP_RUNNER.md) |
 | Coolify / Dokploy | `deploy/docker-compose.selfhost.yml` | [DEPLOY_COOLIFY.md](deploy/docs/DEPLOY_COOLIFY.md) |
 | Bare VPS (Compose) | `deploy/docker-compose.selfhost.yml` | [DEPLOY_COMPOSE.md](deploy/docs/DEPLOY_COMPOSE.md) |
 

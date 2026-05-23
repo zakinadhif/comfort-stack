@@ -112,3 +112,59 @@ jobs:
           gcloud run services replace deploy/cloudrun.service.yaml --region "${GCP_REGION:-asia-southeast1}"
         env:
           GCP_REGION: ${{ secrets.GCP_REGION }}
+
+  deploy-app-runner:
+    name: Deploy to AWS App Runner
+    needs: build-push
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Guard on AWS_ROLE_TO_ASSUME
+        id: guard
+        run: |
+          if [ -n "${{ secrets.AWS_ROLE_TO_ASSUME }}" ] \
+            && [ -n "${{ secrets.AWS_REGION }}" ] \
+            && [ -n "${{ secrets.APP_RUNNER_SERVICE_ARN }}" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Configure AWS credentials (OIDC)
+        if: steps.guard.outputs.enabled == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Login to Amazon ECR
+        if: steps.guard.outputs.enabled == 'true'
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Mirror GHCR image into ECR
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          GHCR_IMAGE: ${{ env.IMAGE }}:sha-${{ needs.build-push.outputs.sha }}
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          SHA: ${{ needs.build-push.outputs.sha }}
+        run: |
+          docker pull "$GHCR_IMAGE"
+          docker tag  "$GHCR_IMAGE" "$ECR_REGISTRY/comfort-stack:latest"
+          docker tag  "$GHCR_IMAGE" "$ECR_REGISTRY/comfort-stack:sha-$SHA"
+          docker push "$ECR_REGISTRY/comfort-stack:latest"
+          docker push "$ECR_REGISTRY/comfort-stack:sha-$SHA"
+      - name: Run database migrations
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          docker run --rm \
+            -e DATABASE_URL="$DATABASE_URL" \
+            "$ECR_REGISTRY/comfort-stack:latest" \
+            node dist/scripts/migrate.js
+      - name: Trigger App Runner deployment
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          aws apprunner start-deployment \
+            --region "${{ secrets.AWS_REGION }}" \
+            --service-arn "${{ secrets.APP_RUNNER_SERVICE_ARN }}"
